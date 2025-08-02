@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Horloge avec Confettis</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background-color: #111;
+    overflow: hidden;
+  }
+  body {
+    font-family: monospace;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    position: relative;
+  }
+    #clock {
+    font-size: clamp(3rem, 15vw, 10rem);
+    font-weight: bold;
+    z-index: 10;
+    user-select: none;
+    text-align: center;
+    max-width: 100%;
+    word-wrap: break-word;
+    }
+  #timezoneSelect {
+    position: absolute;
+    bottom: 10px;
+    opacity: 0.3;
+    margin-top: 20px;
+    font-size: 1.2rem;
+    padding: 5px 10px;
+    background: #222;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 5px;
+    z-index: 10;
+    user-select: none;
+  }
+  canvas {
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 5;
+  }
+</style>
+</head>
+<body>
+  <div id="clock">00:00:00</div>
+  <select id="timezoneSelect"></select>
+
+  <canvas id="confettiCanvas"></canvas>
+
+<script>
+  const clockEl = document.getElementById('clock');
+  const selectEl = document.getElementById('timezoneSelect');
+  const canvas = document.getElementById('confettiCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  class Confetti {
+    constructor(x, y) {
+      this.x = x;
+      this.y = y;
+      this.size = 15 + Math.random() * 15;
+      this.color = `hsl(${Math.random() * 360}, 80%, 60%)`;
+
+      const isMobile = window.innerWidth < 768; // mobile ≈ écran < 768px
+      const velocityFactor = isMobile ? 0.4 : 1; // réduire la vitesse sur mobile
+
+      this.gravity = 0.1 + Math.random() * 0.1 * velocityFactor;
+      this.velocityX = (Math.random() - 0.5) * 8 * velocityFactor;
+      this.velocityY = ((Math.random() * -12) - 6) * velocityFactor;
+      this.rotation = Math.random() * 360;
+      this.rotationSpeed = (Math.random() - 0.5) * 15;
+      this.opacity = 1;
+      this.life = 0;
+      this.duration = 120 + Math.random() * 80;
+    }
+
+    update() {
+      this.velocityY += this.gravity;
+      this.x += this.velocityX;
+      this.y += this.velocityY;
+      this.rotation += this.rotationSpeed;
+      this.life++;
+      if (this.life > this.duration) {
+        this.opacity -= 0.02;
+      }
+    }
+
+    draw(ctx) {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate((this.rotation * Math.PI) / 180);
+      ctx.fillStyle = this.color;
+      ctx.globalAlpha = this.opacity;
+      ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size * 0.4);
+      ctx.restore();
+    }
+
+    isDead() {
+      return this.opacity <= 0;
+    }
+  }
+
+  let confettis = [];
+
+    function launchConfettis(x = null, y = null, count = 100) {
+    for (let i = 0; i < count; i++) {
+        let posX = x !== null ? x + (Math.random() - 0.5) * 50 : Math.random() * window.innerWidth;
+        let posY = y !== null ? y + (Math.random() - 0.5) * 50 : Math.random() * window.innerHeight * 0.5;
+        confettis.push(new Confetti(posX, posY));
+    }
+    }
+
+
+  function animateConfettis() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    for(let i = confettis.length - 1; i >= 0; i--) {
+      const c = confettis[i];
+      c.update();
+      c.draw(ctx);
+      if (c.isDead()) confettis.splice(i, 1);
+    }
+    requestAnimationFrame(animateConfettis);
+  }
+
+  animateConfettis();
+
+  async function loadTimezones() {
+    const zones = Intl.supportedValuesOf("timeZone");
+    zones.forEach(zone => {
+      const option = document.createElement('option');
+      option.value = zone;
+      option.textContent = zone;
+      selectEl.appendChild(option);
+    });
+
+    const savedZone = localStorage.getItem('timezone') || Intl.DateTimeFormat().resolvedOptions().timeZone;
+    selectEl.value = savedZone;
+
+    // Initialize lastHour and lastMinute with current hour and minute
+    const now = new Date();
+    const tz = selectEl.value;
+    lastHour = now.toLocaleString('fr-FR', { timeZone: tz, hour: '2-digit', hour12: false });
+    lastMinute = now.toLocaleString('fr-FR', { timeZone: tz, minute: '2-digit' });
+
+    updateTime();
+  }
+
+  selectEl.addEventListener('change', () => {
+    const now = new Date();
+    const tz = selectEl.value;
+    lastHour = now.toLocaleString('fr-FR', { timeZone: tz, hour: '2-digit', hour12: false });
+    lastMinute = now.toLocaleString('fr-FR', { timeZone: tz, minute: '2-digit' });
+
+    localStorage.setItem('timezone', selectEl.value);
+    updateTime();
+  });
+
+  let lastHour;
+  let lastMinute;
+
+  function updateTime() {
+    const tz = selectEl.value;
+    const now = new Date();
+    const options = {
+      timeZone: tz,
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    };
+    const formatted = new Intl.DateTimeFormat('fr-FR', options).format(now);
+    clockEl.textContent = formatted;
+
+    const currentHour = now.toLocaleString('fr-FR', { timeZone: tz, hour: '2-digit', hour12: false });
+    const currentMinute = now.toLocaleString('fr-FR', { timeZone: tz, minute: '2-digit' });
+
+    if (currentHour !== lastHour) {
+      lastHour = currentHour;
+      launchConfettis();
+    }
+
+    if (currentMinute !== lastMinute) {
+      lastMinute = currentMinute;
+      launchConfettis(window.innerWidth / 2, window.innerHeight / 2, 50);
+    }
+  }
+
+    document.body.addEventListener('click', (e) => {
+        launchConfettis(e.clientX, e.clientY, 3);
+    });
+
+  setInterval(updateTime, 1000);
+  loadTimezones();
+</script>
+</body>
+</html>
