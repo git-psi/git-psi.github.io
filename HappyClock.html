@@ -4,6 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Horloge avec Confettis</title>
+
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#111111" />
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-512.png">
+
 <style>
   html, body {
     margin: 0; padding: 0; height: 100%;
@@ -201,9 +207,17 @@
     }
   }
 
-    document.body.addEventListener('click', (e) => {
-        launchConfettis(e.clientX, e.clientY, 3);
+  document.body.addEventListener('click', (e) => {
+      launchConfettis(e.clientX, e.clientY, 3);
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('Service Worker enregistré'))
+        .catch(err => console.error('Erreur SW:', err));
     });
+  }
 
   setInterval(updateTime, 1000);
   loadTimezones();
