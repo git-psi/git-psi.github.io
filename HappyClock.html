@@ -37,7 +37,7 @@
     }
   #timezoneSelect {
     position: absolute;
-    bottom: 10px;
+    bottom: calc(env(safe-area-inset-bottom) + 10px);
     opacity: 0.3;
     margin-top: 20px;
     font-size: 1.2rem;
@@ -170,8 +170,8 @@
   selectEl.addEventListener('change', () => {
     const now = new Date();
     const tz = selectEl.value;
-    //lastHour = now.toLocaleString('fr-FR', { timeZone: tz, hour: '2-digit', hour12: false });
-    //lastMinute = now.toLocaleString('fr-FR', { timeZone: tz, minute: '2-digit' });
+    lastHour = now.toLocaleString('fr-FR', { timeZone: tz, hour: '2-digit', hour12: false });
+    lastMinute = now.toLocaleString('fr-FR', { timeZone: tz, minute: '2-digit' });
 
     localStorage.setItem('timezone', selectEl.value);
     updateTime();
