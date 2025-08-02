@@ -127,7 +127,7 @@
     function launchConfettis(x = null, y = null, count = 100) {
     for (let i = 0; i < count; i++) {
         let posX = x !== null ? x + (Math.random() - 0.5) * 50 : Math.random() * window.innerWidth;
-        let posY = y !== null ? y + (Math.random() - 0.5) * 50 : Math.random() * window.innerHeight * 0.5;
+        let posY = y !== null ? y + (Math.random() - 0.5) * 50 : Math.random() * window.innerHeight;
         confettis.push(new Confetti(posX, posY));
     }
     }
@@ -170,8 +170,8 @@
   selectEl.addEventListener('change', () => {
     const now = new Date();
     const tz = selectEl.value;
-    lastHour = now.toLocaleString('fr-FR', { timeZone: tz, hour: '2-digit', hour12: false });
-    lastMinute = now.toLocaleString('fr-FR', { timeZone: tz, minute: '2-digit' });
+    //lastHour = now.toLocaleString('fr-FR', { timeZone: tz, hour: '2-digit', hour12: false });
+    //lastMinute = now.toLocaleString('fr-FR', { timeZone: tz, minute: '2-digit' });
 
     localStorage.setItem('timezone', selectEl.value);
     updateTime();
